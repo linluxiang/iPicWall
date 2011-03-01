@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>iPicWall</title>
+    <script src="{{url_for('static', filename='jquery.js')}}" type="text/javascript" charset="utf-8"></script>
+    <style media="screen">
+        body {
+            background: grey;
+        }
+        #main {
+            width: 1200px;
+            margin: 0 auto 0 auto;
+            z-index: 0;
+        }
+
+        .pic {
+            -webkit-animation-name: main;
+        }
+
+        @-webkit-keyframes main{
+        }
+        
+
+    </style>
+</head>
+<body>
+    <div id="main">
+    </div>
+
+</body>
+<script type="text/javascript" charset="utf-8">
+    window.pics = new Array();
+    window.queue = new Array();
+    window.lock = false;
+    window.thumbnail_height = 125;
+    window.thumbnail_width = 100;
+    window.raw_height = 550;
+    window.raw_width = 440;
+    window.main_width = 1200;
+    window.main_top = 20;
+    window.main_left = 40;
+    window.column_max = Math.floor(main_width / thumbnail_width);
+    window.init_css = {'-webkit-transition': 'all 2s ease-in-out', '-webkit-transition-delay': '1s', 'margin': '20 auto', 'display': 'inline', 'height': raw_height + 'px', 'width': raw_width + 'px', 'border': '1px solid black', 'position': 'absolute', 'top': '30%', 'left': '400px'}
+
+    function next_pic() {
+        window.lock = false;
+    }
+
+    function animate() {
+        if ((!window.lock) && (window.queue.length > 0)) {
+            window.lock = true;
+            var name = window.queue.shift();
+            var i = new Image();
+            i.src = '/static/upload/' + name;
+            i.className = 'pic';
+            window.pics.push(i);
+            var id = window.pics.length - 1;
+            i.id = 'pic' + id;
+            var selector = '#' + i.id;
+            $(i).css(init_css);
+            $('#main').append(i);
+            var position = get_position(id);
+            $(selector).animate({'left': position.left + 'px', 'top': position.top + 'px', 'width': window.thumbnail_width + 'px', 'height': window.thumbnail_height + 'px'}, 2000, next_pic);
+        }
+    }
+
+    function insert_pic() {
+        $.getJSON('/pics', function(data) {
+            if (data) {
+                var animation_l = new Array();
+                $.each(data, function(key, val) {
+                    window.queue.push(val);
+                });
+            }
+        });
+    };
+
+
+    function get_position(index) {
+        var row = Math.floor(index / (column_max))
+        var column = index - row * column_max;
+        var top = main_top + row * thumbnail_height;
+        var left = main_left + column * thumbnail_width + 2;
+        return {'top': top, 'left': left};
+    }
+    //insert_pic();
+    setInterval('insert_pic()', 1000);
+    setInterval('animate()', 4500);
+</script>
+</html>
